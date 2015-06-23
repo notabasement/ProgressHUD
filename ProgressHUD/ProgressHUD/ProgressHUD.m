@@ -76,6 +76,14 @@
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)show:(NSString *)status Interaction:(BOOL)Interaction spin:(BOOL)spin hide:(BOOL)hide
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    [self shared].interaction = Interaction;
+    [[self shared] hudMake:status image:nil spin:spin hide:hide];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
 + (void)showSuccess:(NSString *)status
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
@@ -105,6 +113,30 @@
 {
 	[self shared].interaction = Interaction;
 	[[self shared] hudMake:status image:[self shared].imageError?[self shared].imageError:HUD_IMAGE_ERROR spin:NO hide:YES];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)showImage:(UIImage *)image status:(NSString *)status
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    [self shared].interaction = YES;
+    [[self shared] hudMake:status image:image spin:NO hide:YES];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)showImage:(UIImage *)image status:(NSString *)status Interaction:(BOOL)Interaction
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    [self shared].interaction = Interaction;
+    [[self shared] hudMake:status image:image spin:NO hide:YES];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)showImage:(UIImage *)image status:(NSString *)status Interaction:(BOOL)Interaction hide:(BOOL)hide
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    [self shared].interaction = Interaction;
+    [[self shared] hudMake:status image:image spin:NO hide:hide];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,34 +264,38 @@
 - (void)hudSize
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	CGRect labelRect = CGRectZero;
-	CGFloat hudWidth = 100, hudHeight = 100;
+    const UIEdgeInsets imageInsets = UIEdgeInsetsMake(24.0, 24.0, 24.0, 24.0);
+    const CGSize imageSize = image.image && !image.hidden ? image.image.size : CGSizeMake(25.0, 25.0);
+    const UIEdgeInsets labelInsets = UIEdgeInsetsMake(17.0, 12.0, 14.0, 12.0);
+    //---------------------------------------------------------------------------------------------------------------------------------------------
+    CGRect labelRect = CGRectZero;
+    CGFloat hudWidth = MAX(imageInsets.left + imageSize.width + imageInsets.right, 150.0);
+    CGFloat hudHeight = MAX(imageInsets.top + imageSize.height + imageInsets.bottom, 150.0);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (label.text != nil)
 	{
 		NSDictionary *attributes = @{NSFontAttributeName:label.font};
 		NSInteger options = NSStringDrawingUsesFontLeading | NSStringDrawingTruncatesLastVisibleLine | NSStringDrawingUsesLineFragmentOrigin;
-		labelRect = [label.text boundingRectWithSize:CGSizeMake(200, 300) options:options attributes:attributes context:NULL];
+		labelRect = [label.text boundingRectWithSize:CGSizeMake(150.0, CGFLOAT_MAX) options:options attributes:attributes context:NULL];
+        
+        hudWidth = MAX(hudWidth, labelInsets.left + labelRect.size.width + labelInsets.right);
+        labelRect.origin.x = round((hudWidth - labelRect.size.width) / 2.0);
 
-		labelRect.origin.x = 12;
-		labelRect.origin.y = 66;
-
-		hudWidth = labelRect.size.width + 24;
-		hudHeight = labelRect.size.height + 80;
-
-		if (hudWidth < 100)
-		{
-			hudWidth = 100;
-			labelRect.origin.x = 0;
-			labelRect.size.width = 100;
-		}
+        if (image.image || !image.hidden || spinner.isAnimating) { // Image or Spinner visible
+            labelRect.origin.y = imageInsets.top + imageSize.height + labelInsets.top;
+        } else {
+            labelRect.origin.y = labelInsets.top;
+        }
+        
+        hudHeight = MIN(hudHeight, labelRect.origin.y + labelRect.size.height + labelInsets.bottom);
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	hud.bounds = CGRectMake(0, 0, hudWidth, hudHeight);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	CGFloat imagex = hudWidth/2;
-	CGFloat imagey = (label.text == nil) ? hudHeight/2 : 36;
+	CGFloat imagey = (label.text == nil) ? hudHeight/2 : imageInsets.top + imageSize.height / 2.0;
 	image.center = spinner.center = CGPointMake(imagex, imagey);
+    image.bounds = CGRectMake(0.0, 0.0, imageSize.width, imageSize.height);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	label.frame = labelRect;
 }
@@ -327,53 +363,90 @@
 - (void)hudShow
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if (self.alpha == 0)
-	{
-		self.alpha = 1;
-
-		hud.alpha = 0;
-		hud.transform = CGAffineTransformScale(hud.transform, 1.4, 1.4);
-
-		NSUInteger options = UIViewAnimationOptionAllowUserInteraction | UIViewAnimationCurveEaseOut;
-		[UIView animateWithDuration:0.15 delay:0 options:options animations:^{
-			hud.transform = CGAffineTransformScale(hud.transform, 1/1.4, 1/1.4);
-			hud.alpha = 1;
-		} completion:nil];
-	}
+    void (^block)() = ^{
+        
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hudHide) object:nil];
+        
+        if (self.alpha == 0.0) {
+            
+            self.alpha = 1.0;
+            
+            hud.alpha = 0;
+            hud.transform = CGAffineTransformScale(hud.transform, 1.4, 1.4);
+            
+            [UIView animateWithDuration:0.15 delay:0 options:UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState animations:^{
+                
+                hud.transform = CGAffineTransformIdentity;
+                hud.alpha = 1;
+                
+            } completion:nil];
+        }
+    };
+    
+    if ([NSThread isMainThread]) {
+        block();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            block();
+        });
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)hudHide
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	if (self.alpha == 1)
-	{
-		NSUInteger options = UIViewAnimationOptionAllowUserInteraction | UIViewAnimationCurveEaseIn;
-		[UIView animateWithDuration:0.15 delay:0 options:options animations:^{
-			hud.transform = CGAffineTransformScale(hud.transform, 0.7, 0.7);
-			hud.alpha = 0;
-		}
-		completion:^(BOOL finished) {
-			[self hudDestroy];
-			self.alpha = 0;
-		}];
-	}
+    void (^block)() = ^{
+        
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hudHide) object:nil];
+        
+        if (self.alpha == 1.0) {
+            
+            [UIView animateWithDuration:0.15 delay:0 options:UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState animations:^{
+                
+                hud.transform = CGAffineTransformScale(hud.transform, 0.7, 0.7);
+                hud.alpha = 0.0;
+                
+            } completion:^(BOOL finished) {
+                
+                if (finished) {
+                    [self hudDestroy];
+                    self.alpha = 0.0;
+                }
+            }];
+        }
+    };
+    
+    if ([NSThread isMainThread]) {
+        block();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            block();
+        });
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 - (void)timedHide
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	@autoreleasepool
-	{
-		double length = label.text.length;
-		NSTimeInterval sleep = length * 0.04 + 0.5;
-		[NSThread sleepForTimeInterval:sleep];
-
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[self hudHide];
-		});
-	}
+    void (^block)() = ^{
+        
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hudHide) object:nil];
+        
+        double length = label.text.length;
+        NSTimeInterval sleep = length * 0.04 + 0.5;
+        
+        [self performSelector:@selector(hudHide) withObject:nil afterDelay:sleep];
+    };
+    
+    if ([NSThread isMainThread]) {
+        block();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            block();
+        });
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------

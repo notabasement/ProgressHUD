@@ -34,12 +34,17 @@
 
 + (void)show:(NSString *)status;
 + (void)show:(NSString *)status Interaction:(BOOL)Interaction;
++ (void)show:(NSString *)status Interaction:(BOOL)Interaction spin:(BOOL)spin hide:(BOOL)hide;
 
 + (void)showSuccess:(NSString *)status;
 + (void)showSuccess:(NSString *)status Interaction:(BOOL)Interaction;
 
 + (void)showError:(NSString *)status;
 + (void)showError:(NSString *)status Interaction:(BOOL)Interaction;
+
++ (void)showImage:(UIImage *)image status:(NSString *)status;
++ (void)showImage:(UIImage *)image status:(NSString *)status Interaction:(BOOL)Interaction;
++ (void)showImage:(UIImage *)image status:(NSString *)status Interaction:(BOOL)Interaction hide:(BOOL)hide;
 
 @property (nonatomic, readonly) BOOL interaction;
 
