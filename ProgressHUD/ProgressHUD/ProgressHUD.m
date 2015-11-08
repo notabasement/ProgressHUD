@@ -150,6 +150,8 @@
 	if ([delegate respondsToSelector:@selector(window)])
 		window = [delegate performSelector:@selector(window)];
 	else window = [[UIApplication sharedApplication] keyWindow];
+    //---------------------------------------------------------------------------------------------------------------------------------------------
+    self.frame = window.bounds;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	background = nil; hud = nil; spinner = nil; image = nil; label = nil;
     style = HUD_STYLE;
@@ -192,6 +194,8 @@
         hud.backgroundColor = backgroundColor ? backgroundColor : HUD_BACKGROUND_COLOR;
 		hud.layer.cornerRadius = 10;
 		hud.layer.masksToBounds = YES;
+        hud.translatesAutoresizingMaskIntoConstraints = YES;
+        hud.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
 		[self registerNotifications];
 	}
 	//---------------------------------------------------------------------------------------------------------------------------------------------
@@ -201,6 +205,8 @@
 		{
 			background = [[UIView alloc] initWithFrame:window.frame];
             background.backgroundColor = windowColor ? windowColor : HUD_WINDOW_COLOR;
+            background.translatesAutoresizingMaskIntoConstraints = YES;
+            background.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 			[window addSubview:background];
 			[background addSubview:hud];
 		}
@@ -319,7 +325,7 @@
 	}
 	else heightKeyboard = [self keyboardHeight];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
-	CGRect screen = [UIScreen mainScreen].bounds;
+    CGRect screen = window.bounds; // Using window.bounds instead of mainScreen.bounds to adopt Split View
 	CGPoint center = CGPointMake(screen.size.width/2, (screen.size.height-heightKeyboard)/2);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
