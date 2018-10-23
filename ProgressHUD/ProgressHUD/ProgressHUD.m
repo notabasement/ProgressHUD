@@ -32,6 +32,8 @@
 @property (nonatomic, strong) UIImage *imageSuccess;
 @property (nonatomic, strong) UIImage *imageError;
 
+@property (nonatomic, copy) void(^customPositionBlock)(UIView *hud, CGRect windowBounds, CGFloat keyboardHeight);
+
 @end
 
 
@@ -81,6 +83,14 @@
 {
     [self shared].interaction = Interaction;
     [[self shared] hudMake:status image:nil spin:spin hide:hide];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)show:(NSString *)status Interaction:(BOOL)Interaction spin:(BOOL)spin hide:(BOOL)hide customPositionBlock:(void(^)(UIView *hud, CGRect windowBounds, CGFloat keyboardHeight))customPositionBlock
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    [self shared].interaction = Interaction;
+    [[self shared] hudMake:status image:nil spin:spin hide:hide customPositionBlock:customPositionBlock];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -165,6 +175,13 @@
 - (void)hudMake:(NSString *)status image:(UIImage *)img spin:(BOOL)spin hide:(BOOL)hide
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
+    [self hudMake:status image:img spin:spin hide:hide customPositionBlock:nil];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)hudMake:(NSString *)status image:(UIImage *)img spin:(BOOL)spin hide:(BOOL)hide customPositionBlock:(void(^)(UIView *hud, CGRect windowBounds, CGFloat keyboardHeight))customPositionBlock
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
 	[self hudCreate];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	label.text = status;
@@ -173,6 +190,8 @@
 	image.image = img;
 	image.hidden = (img == nil) ? YES : NO;
 	//---------------------------------------------------------------------------------------------------------------------------------------------
+    self.customPositionBlock = customPositionBlock;
+    //---------------------------------------------------------------------------------------------------------------------------------------------
 	if (spin) [spinner startAnimating]; else [spinner stopAnimating];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[self hudSize];
@@ -264,6 +283,7 @@
 	[spinner removeFromSuperview];		spinner = nil;
 	[hud removeFromSuperview];			hud = nil;
 	[background removeFromSuperview];	background = nil;
+    self.customPositionBlock = nil;
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
@@ -326,10 +346,13 @@
 	else heightKeyboard = [self keyboardHeight];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
     CGRect screen = window.bounds; // Using window.bounds instead of mainScreen.bounds to adopt Split View
-	CGPoint center = CGPointMake(screen.size.width/2, (screen.size.height-heightKeyboard)/2);
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	[UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
-		hud.center = CGPointMake(center.x, center.y);
+        if (self.customPositionBlock) {
+            self.customPositionBlock(hud, screen, heightKeyboard);
+        } else {
+            hud.center = CGPointMake(screen.size.width/2, (screen.size.height-heightKeyboard)/2);
+        }
 	} completion:nil];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	if (background != nil) background.frame = window.frame;
@@ -442,8 +465,7 @@
         
         double length = label.text.length;
         NSTimeInterval sleep = length * 0.04 + 0.5;
-        
-        [self performSelector:@selector(hudHide) withObject:nil afterDelay:sleep];
+        [self performSelector:@selector(hudHide) withObject:nil afterDelay:sleep inModes:@[NSRunLoopCommonModes]];
     };
     
     if ([NSThread isMainThread]) {

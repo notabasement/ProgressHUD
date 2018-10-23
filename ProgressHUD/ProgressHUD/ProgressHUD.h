@@ -35,6 +35,8 @@
 + (void)show:(NSString *)status;
 + (void)show:(NSString *)status Interaction:(BOOL)Interaction;
 + (void)show:(NSString *)status Interaction:(BOOL)Interaction spin:(BOOL)spin hide:(BOOL)hide;
++ (void)show:(NSString *)status Interaction:(BOOL)Interaction spin:(BOOL)spin hide:(BOOL)hide customPositionBlock:(void(^)(UIView *hud, CGRect windowBounds, CGFloat keyboardHeight))customPositionBlock;
+
 
 + (void)showSuccess:(NSString *)status;
 + (void)showSuccess:(NSString *)status Interaction:(BOOL)Interaction;
