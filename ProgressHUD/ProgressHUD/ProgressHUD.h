@@ -61,6 +61,7 @@
 + (void)setStatusFont:(UIFont *)newStatusFont;
 + (void)setStatusColor:(UIColor *)newStatusColor;
 + (void)setSpinnerColor:(UIColor *)newSpinnerColor;
++ (void)setImageTintColor:(UIColor *)newImageTintColor;
 + (void)setBackgroundColor:(UIColor *)newBackgroundColor;
 + (void)setWindowColor:(UIColor *)newWindowColor;
 + (void)setImageSuccess:(UIImage *)newImageSuccess;

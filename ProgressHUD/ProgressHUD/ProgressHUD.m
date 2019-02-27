@@ -28,6 +28,7 @@
 @property (nonatomic, strong) UIColor *statusColor;
 @property (nonatomic, strong) UIColor *spinnerColor;
 @property (nonatomic, strong) UIColor *backgroundColor;
+@property (nonatomic, strong) UIColor *imageTintColor;
 @property (nonatomic, strong) UIColor *windowColor;
 @property (nonatomic, strong) UIImage *imageSuccess;
 @property (nonatomic, strong) UIImage *imageError;
@@ -40,7 +41,7 @@
 @implementation ProgressHUD
 
 @synthesize interaction, window, background, hud, spinner, image, label;
-@synthesize style, statusFont, statusColor, spinnerColor, backgroundColor, windowColor, imageSuccess, imageError;
+@synthesize style, statusFont, statusColor, spinnerColor, backgroundColor, imageTintColor, windowColor, imageSuccess, imageError;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 + (ProgressHUD *)shared
@@ -243,6 +244,9 @@
 	if (image == nil)
 	{
 		image = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
+        if (imageTintColor) {
+            image.tintColor = imageTintColor;
+        }
 	}
 	if (image.superview == nil) [hud addSubview:image];
 	//---------------------------------------------------------------------------------------------------------------------------------------------
@@ -551,6 +555,25 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 {
     [[self shared] setSpinnerColor:newSpinnerColor];
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+- (void)setImageTintColor:(UIColor *)newImageTintColor
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    imageTintColor = newImageTintColor;
+    
+    if (image)
+    {
+        image.tintColor = imageTintColor;
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------
++ (void)setImageTintColor:(UIColor *)newImageTintColor
+//-------------------------------------------------------------------------------------------------------------------------------------------------
+{
+    [[self shared] setImageTintColor:newImageTintColor];
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
