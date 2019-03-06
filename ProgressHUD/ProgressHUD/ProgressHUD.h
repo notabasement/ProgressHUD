@@ -31,6 +31,7 @@
 + (ProgressHUD *)shared;
 
 + (void)dismiss;
++ (void)dismissAnimated:(BOOL)animated;
 
 + (void)show:(NSString *)status;
 + (void)show:(NSString *)status Interaction:(BOOL)Interaction;
