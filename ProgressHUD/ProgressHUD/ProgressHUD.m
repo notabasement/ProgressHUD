@@ -389,7 +389,10 @@
 					{
 						if ([[hostKeyboard description] hasPrefix:@"<UIInputSetHost"])
 						{
-							return hostKeyboard.frame.size.height;
+                            CGRect intersecRect = CGRectIntersection(possibleKeyboard.frame, hostKeyboard.frame);
+                            if (!CGRectIsEmpty(intersecRect)) {
+                                return intersecRect.size.height;
+                            }
 						}
 					}
 				}
